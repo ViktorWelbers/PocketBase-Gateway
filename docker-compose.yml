@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  server:
+    container_name: golang-service
+    restart: always
+    image: apigw/img2img
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - AZURE_SERVICEBUS_CONNECTION_STRING=${AZURE_SERVICEBUS_CONNECTION_STRING}
+      - AZURE_PUBLISH_QUEUE_NAME=${AZURE_PUBLISH_QUEUE_NAME}
+      - AZURE_RECEIVE_QUEUE_NAME=${AZURE_RECEIVE_QUEUE_NAME}
+      - IMAGE_SERVICE_API_KEY=${IMAGE_SERVICE_API_KEY}
+      - IMAGE_SERVICE_URL=https://img2img-management.azurewebsites.net/api/images
+      - AUTH_TOKEN=${AUTH_TOKEN}
+    ports:
+      - "8088:8080"
+    volumes:
+      - pocketbase:/data/db server
+volumes:
+  pocketbase:
