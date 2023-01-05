@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  server:
+    container_name: golang-service
+    restart: always
+    image: apigw/img2img
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - AZURE_SERVICEBUS_CONNECTION_STRING=Endpoint=sb://img2img.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=LrYdYhYgdOr+RAtX9FdzbgVYCllaQ8kn6rB39GIauUc=
+      - AZURE_PUBLISH_QUEUE_NAME=ml-scheduling
+      - AZURE_RECEIVE_QUEUE_NAME=ml-results
+      - IMAGE_SERVICE_API_KEY=2282337a-b5dc-41df-a9fa-efb725d782c9
+      - IMAGE_SERVICE_URL=https://img2img-management.azurewebsites.net/api/images
+      - AUTH_TOKEN=f8068bf6-7f1a-11ed-bbaa-9fab3c9f84e4
+    ports:
+      - "8088:8080"
+    volumes:
+      - pocketbase:/data/db server
+volumes:
+  pocketbase:
