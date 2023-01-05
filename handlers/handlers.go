@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
@@ -84,43 +85,44 @@ func (h *ImageDownload) Handle(c echo.Context) error {
 
 func (h *ImageUpload) Handle(c echo.Context) error {
 	var jsonData map[string]interface{}
-	log.Println("Received request to upload images")
-	form, err := c.MultipartForm()
+	log.Println("Received request to upload image")
+	imageFile, err := c.FormFile("file")
 	if err != nil {
-		return apis.NewBadRequestError("Error when trying to get multipart form", err.Error())
+		return apis.NewBadRequestError("Error when trying to get image from body", err.Error())
 	}
-	files := form.File["files"]
-	for _, imageFile := range files {
-		contentType := imageFile.Header.Get("Content-Type")
-		image, err := imageFile.Open()
-		if err != nil {
-			log.Println("Error when trying to open image file")
-			return apis.NewBadRequestError("Error opening the file", err.Error())
-		}
-		defer image.Close()
-
-		//clientId := c.Get(apis.ContextAuthRecordKey).(*models.Record).Username()
-		clientId := "test"
-		resp, err := h.ImageHttpClient.UploadImage(clientId, image, contentType)
-		if err != nil {
-			log.Println("Error when trying to upload image via http client")
-			return apis.NewBadRequestError("Error when uploading image via http client", err.Error())
-		}
-		defer resp.Body.Close()
-
-		data, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Println("Error when trying to read response body from http client")
-			return apis.NewBadRequestError("Error when trying to get data from http client response body", err.Error())
-		}
-
-		err = json.Unmarshal(data, &jsonData)
-		if err != nil {
-			return err
-		}
-		return c.JSON(http.StatusOK, jsonData)
+	image, err := imageFile.Open()
+	if err != nil {
+		return apis.NewBadRequestError("Error opening the file", err.Error())
 	}
-	return apis.NewBadRequestError("No files were uploaded", nil)
+	defer image.Close()
+
+	file := &os.File{}
+	_, err = io.Copy(file, image)
+	if err != nil {
+		return apis.NewBadRequestError("Error reading the file", err.Error())
+	}
+	defer file.Close()
+
+	//clientId := c.Get(apis.ContextAuthRecordKey).(*models.Record).Username()
+	clientId := "test"
+	resp, err := h.ImageHttpClient.UploadImage(clientId, file)
+	if err != nil {
+		return apis.NewBadRequestError("Error when uploading image via http client", err.Error())
+	}
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return apis.NewBadRequestError("Error when trying to get data from body", err.Error())
+	}
+	log.Println(resp.StatusCode)
+
+	err = json.Unmarshal(data, &jsonData)
+	if err != nil {
+		log.Println(err)
+		return apis.NewBadRequestError("Error when trying to unmarshal data", err.Error())
+	}
+	return c.JSON(http.StatusOK, jsonData)
 }
 
 func (h *MessageProducer) Handle(c echo.Context) error {

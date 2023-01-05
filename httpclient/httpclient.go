@@ -1,9 +1,12 @@
 package httpclient
 
 import (
+	"bytes"
+	"io"
 	"log"
 	"mime/multipart"
 	"net/http"
+	"os"
 )
 
 type ImageHttpClient struct {
@@ -30,13 +33,27 @@ func (h ImageHttpClient) GetImageFromQueue(uuid string) (*http.Response, error) 
 	return h.client.Do(req)
 }
 
-func (h ImageHttpClient) UploadImage(clientId string, image multipart.File, contentType string) (*http.Response, error) {
+func (h ImageHttpClient) UploadImage(clientId string, image *os.File) (*http.Response, error) {
 	log.Println("Uploading image to image service with for client id: " + clientId)
-	req, err := http.NewRequest("POST", h.url+"/upload/"+clientId, image)
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	defer writer.Close()
+	part, err := writer.CreateFormFile("file", image.Name())
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
+	_, err = io.Copy(part, image)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", h.url+"/upload/"+clientId, bytes.NewReader(body.Bytes()))
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Add("Authorization", h.apiKey)
-	req.Header.Add("Content-Type", contentType)
 	return h.client.Do(req)
 }
