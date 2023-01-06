@@ -3,9 +3,9 @@ package handlers
 import (
 	"api-gateway/httpclient"
 	"api-gateway/messaging"
-	"encoding/json"
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/apis"
+	"github.com/pocketbase/pocketbase/models"
 	"io"
 	"log"
 	"net/http"
@@ -28,7 +28,7 @@ type ImageDownload struct {
 	ImageHttpClient *httpclient.ImageHttpClient
 }
 
-type ImageUpload struct {
+type Authentication struct {
 	// The client to use for the handler
 	ImageHttpClient *httpclient.ImageHttpClient
 }
@@ -46,17 +46,13 @@ func NewImageDownloadHandler(queueClient *messaging.QueueClient, httpClient *htt
 	}
 }
 
-func NewImageUploadHandler(httpClient *httpclient.ImageHttpClient) Handler {
-	return &ImageUpload{
+func NewAuthenticationHandler(httpClient *httpclient.ImageHttpClient) Handler {
+	return &Authentication{
 		ImageHttpClient: httpClient,
 	}
 }
 
 func (h *ImageDownload) Handle(c echo.Context) error {
-	//authRecord, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
-	//if authRecord == nil {
-	//	return apis.NewForbiddenError("Only auth records can access this endpoint", nil)
-	//}
 	log.Print("Received request to retrieve image")
 	messageId := c.QueryParam("message_id")
 
@@ -82,34 +78,17 @@ func (h *ImageDownload) Handle(c echo.Context) error {
 	return c.Blob(http.StatusOK, resp.Header.Get("Content-Type"), image)
 }
 
-func (h *ImageUpload) Handle(c echo.Context) error {
-	var jsonData map[string]interface{}
-	log.Println("Received request to upload image")
-	imageFile, err := c.FormFile("file")
-	if err != nil {
-		return apis.NewBadRequestError("Error when trying to get image from body", err.Error())
+func (h *Authentication) Handle(c echo.Context) error {
+	authRecord, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
+	if authRecord == nil {
+		return apis.NewForbiddenError("Only auth records can access this endpoint", nil)
 	}
+	userName := authRecord.Username()
 
-	//clientId := c.Get(apis.ContextAuthRecordKey).(*models.Record).Username()
-	clientId := "test"
-	resp, err := h.ImageHttpClient.UploadImage(clientId, imageFile, imageFile.Header.Get("Content-Type"))
-	if err != nil {
-		return apis.NewBadRequestError("Error when uploading image via http client", err.Error())
-	}
-	defer resp.Body.Close()
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return apis.NewBadRequestError("Error when trying to get data from body", err.Error())
-	}
-	log.Println(resp.StatusCode)
-
-	err = json.Unmarshal(data, &jsonData)
-	if err != nil {
-		log.Println(err)
-		return apis.NewBadRequestError("Error when trying to unmarshal data", err.Error())
-	}
-	return c.JSON(http.StatusOK, jsonData)
+	log.Print("Received request to confirm login")
+	return c.JSON(http.StatusOK, map[string]string{
+		"client_id": userName,
+	})
 }
 
 func (h *MessageProducer) Handle(c echo.Context) error {

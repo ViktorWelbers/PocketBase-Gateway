@@ -21,7 +21,7 @@ func addHandlerToRouter(app *pocketbase.PocketBase, handler handlers.Handler, me
 			Handler: handler.Handle,
 			Middlewares: []echo.MiddlewareFunc{
 				apis.ActivityLogger(app),
-				//apis.RequireRecordAuth(),
+				apis.RequireRecordAuth(),
 			},
 		})
 		if err != nil {
@@ -38,7 +38,7 @@ func main() {
 	queueClient := messaging.NewQueueClient(config.ReceiveQueueName, config.PublishQueueName, config.BusConnectionString)
 	addHandlerToRouter(app, handlers.NewMessageProducerHandler(queueClient), "GET", "api/send_message")
 	addHandlerToRouter(app, handlers.NewImageDownloadHandler(queueClient, httpClient), "GET", "api/get_image")
-	addHandlerToRouter(app, handlers.NewImageUploadHandler(httpClient), "POST", "api/upload/")
+	addHandlerToRouter(app, handlers.NewAuthenticationHandler(httpClient), "GET", "api/check_auth")
 	if err := app.Start(); err != nil {
 		log.Fatal(err)
 	}
