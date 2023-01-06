@@ -9,7 +9,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 )
@@ -90,22 +89,10 @@ func (h *ImageUpload) Handle(c echo.Context) error {
 	if err != nil {
 		return apis.NewBadRequestError("Error when trying to get image from body", err.Error())
 	}
-	image, err := imageFile.Open()
-	if err != nil {
-		return apis.NewBadRequestError("Error opening the file", err.Error())
-	}
-	defer image.Close()
-
-	file := &os.File{}
-	_, err = io.Copy(file, image)
-	if err != nil {
-		return apis.NewBadRequestError("Error reading the file", err.Error())
-	}
-	defer file.Close()
 
 	//clientId := c.Get(apis.ContextAuthRecordKey).(*models.Record).Username()
 	clientId := "test"
-	resp, err := h.ImageHttpClient.UploadImage(clientId, file)
+	resp, err := h.ImageHttpClient.UploadImage(clientId, imageFile, imageFile.Header.Get("Content-Type"))
 	if err != nil {
 		return apis.NewBadRequestError("Error when uploading image via http client", err.Error())
 	}
