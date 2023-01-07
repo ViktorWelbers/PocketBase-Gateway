@@ -17,8 +17,8 @@ import (
 func AddHealthcheck(app *pocketbase.PocketBase) {
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		_, err := e.Router.AddRoute(echo.Route{
-			Method: "GET",
-			Path:   "/health",
+			Method: http.MethodGet,
+			Path:   "api/health",
 			Handler: func(c echo.Context) error {
 				return c.JSON(http.StatusOK, map[string]string{"status": "OK"})
 			},
