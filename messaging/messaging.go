@@ -21,6 +21,7 @@ type Message struct {
 	PromptGuidance float64 `json:"prompt_guidance"`
 	Strength       float64 `json:"strength"`
 	ModelType      string  `json:"model_type"`
+	Token          string  `json:"token"`
 }
 
 func NewQueueClient(receivingQueueName, publishQueueName, connectingString string) *QueueClient {

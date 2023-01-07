@@ -111,6 +111,7 @@ func (h *MessageProducer) Handle(c echo.Context) error {
 		Uuid:           uuid,
 		MessageId:      messageId,
 		ModelType:      modelType,
+		Token:          c.Request().Header.Get("Authorization"),
 	}
 	err := message.Send(h.QueueClient)
 	if err != nil {
