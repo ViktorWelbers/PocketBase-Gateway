@@ -5,10 +5,14 @@ import (
 	"net/http"
 )
 
+type httpClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 type ImageHttpClient struct {
 	url    string
 	apiKey string
-	client *http.Client
+	client httpClient
 }
 
 func NewImageHttpClient(url string, apiKey string) *ImageHttpClient {
