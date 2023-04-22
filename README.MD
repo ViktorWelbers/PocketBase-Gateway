@@ -2,7 +2,7 @@
 
 This is an Authentication-Gateway that uses project PocketBase for authentication and user management.
 
-It was used on Azure for the authentication of all other services that in my image generation deep learning
+It was used on Azure for the authentication of all other services in my image generation deep learning
 project.
 
 # Functionality
