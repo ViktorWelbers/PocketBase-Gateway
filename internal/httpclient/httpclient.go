@@ -3,6 +3,7 @@ package httpclient
 import (
 	"log"
 	"net/http"
+	"time"
 )
 
 type httpClient interface {
@@ -19,7 +20,9 @@ func NewImageHttpClient(url string, apiKey string) *ImageHttpClient {
 	return &ImageHttpClient{
 		url:    url,
 		apiKey: apiKey,
-		client: &http.Client{},
+		client: &http.Client{
+			Timeout: time.Second * 10,
+		},
 	}
 }
 
