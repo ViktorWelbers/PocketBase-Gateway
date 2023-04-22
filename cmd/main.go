@@ -2,9 +2,9 @@
 package main
 
 import (
-	"api-gateway/internal/handlers"
-	"api-gateway/internal/httpclient"
-	"api-gateway/internal/messaging"
+	"api-gateway/pkg/handlers"
+	"api-gateway/pkg/httpclient"
+	"api-gateway/pkg/messaging"
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
